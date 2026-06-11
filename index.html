@@ -355,17 +355,35 @@ function renderCalendar(){
   box.innerHTML = "";
 
   const m = months[monthIndex];
-  const days = new Date(m.getFullYear(), m.getMonth()+1, 0).getDate();
+  const days = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
 
-  for(let i=1;i<=days;i++){
+  const weekdays = [
+    "Κυριακή",
+    "Δευτέρα",
+    "Τρίτη",
+    "Τετάρτη",
+    "Πέμπτη",
+    "Παρασκευή",
+    "Σάββατο"
+  ];
+
+  for(let i = 1; i <= days; i++){
 
     const date = `${m.getFullYear()}-${m.getMonth()+1}-${i}`;
+
     const div = document.createElement("div");
 
-    div.className = "day" + (selectedDay===date?" active":"");
-    div.innerHTML = i;
+    div.className = "day" + (selectedDay === date ? " active" : "");
 
-    div.onclick = ()=>{
+    const dateObj = new Date(m.getFullYear(), m.getMonth(), i);
+    const dayName = weekdays[dateObj.getDay()];
+
+    div.innerHTML = `
+      <div style="font-size:18px;font-weight:600">${i}</div>
+      <div style="font-size:10px;opacity:0.7">${dayName}</div>
+    `;
+
+    div.onclick = () => {
       selectedDay = date;
       selectedTime = null;
       renderCalendar();
@@ -472,11 +490,22 @@ function renderAdminCalendar(){
   box.innerHTML = "";
 
   const m = adminMonths[adminMonthIndex];
-  const days = new Date(m.getFullYear(), m.getMonth()+1, 0).getDate();
+  const days = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
 
-  for(let i=1;i<=days;i++){
+  const weekdays = [
+    "Κυριακή",
+    "Δευτέρα",
+    "Τρίτη",
+    "Τετάρτη",
+    "Πέμπτη",
+    "Παρασκευή",
+    "Σάββατο"
+  ];
+
+  for(let i = 1; i <= days; i++){
 
     const date = `${m.getFullYear()}-${m.getMonth()+1}-${i}`;
+
     const has = booked.some(b => b.day === date);
     const isBlocked = blocked.some(b => b.day === date);
 
@@ -487,9 +516,15 @@ function renderAdminCalendar(){
       (isBlocked ? " blocked" : "") +
       (!isBlocked && has ? " active" : "");
 
-    div.innerHTML = i;
+    const dateObj = new Date(m.getFullYear(), m.getMonth(), i);
+    const dayName = weekdays[dateObj.getDay()];
 
-    div.onclick = ()=>{
+    div.innerHTML = `
+      <div style="font-size:18px;font-weight:600">${i}</div>
+      <div style="font-size:10px;opacity:0.7">${dayName}</div>
+    `;
+
+    div.onclick = () => {
       adminSelectedDay = date;
       renderAdminDay();
       updateBlockButton();
