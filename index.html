@@ -433,11 +433,31 @@ function renderTimes(){
 }
 
 async function book(){
+
   const name = document.getElementById("name").value;
   const phone = document.getElementById("phone").value;
 
+  // Έλεγχος αν το ίδιο τηλέφωνο έχει ήδη ραντεβού την ίδια μέρα
+  const existingBooking = booked.find(b =>
+    b.phone === phone && b.day === selectedDay
+  );
+
+  if(existingBooking){
+
+    alert(
+      `Γεια σου ${existingBooking.name}! Έχεις ήδη ενεργό ραντεβού στις ${existingBooking.time}.`
+    );
+
+    return;
+  }
+
   await client.from("appointmentsnew").insert([
-    { name, phone, day: selectedDay, time: selectedTime }
+    {
+      name,
+      phone,
+      day: selectedDay,
+      time: selectedTime
+    }
   ]);
 
   go(4);
