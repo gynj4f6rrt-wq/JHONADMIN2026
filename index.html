@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>JHON Barber</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+  --bg1:#07070a;
+  --bg2:#0f0f14;
+  --glass:rgba(255,255,255,0.06);
+  --glass2:rgba(255,255,255,0.03);
+  --stroke:rgba(255,255,255,0.08);
+  --text:#ffffff;
+  --muted:rgba(255,255,255,0.55);
+  --gold:#d6b25e;
+  --gold2:#ffdf8a;
+}
+
+*{box-sizing:border-box;font-family:Inter,sans-serif;}
+
+body{
+  margin:0;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:
+    radial-gradient(circle at 20% 20%, #1a1a22, transparent 40%),
+    radial-gradient(circle at 80% 80%, #0d0d12, transparent 40%),
+    linear-gradient(180deg, var(--bg1), var(--bg2));
+  color:var(--text);
+}
+
+.app{
+  width:390px;
+  height:820px;
+  border-radius:34px;
+  padding:22px;
+  overflow:hidden;
+  background:linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  border:1px solid var(--stroke);
+}
+
+.screen{
+  display:none;
+  height:100%;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+}
+
+.screen.active{display:flex;}
+
+h1{
+  font-size:64px;
+  letter-spacing:4px;
+  margin:0;
+  background:linear-gradient(90deg,#fff,var(--gold2));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+h2{font-size:18px;margin:12px 0;}
+
+.sub{
+  font-size:20px;
+  letter-spacing:8px;
+  color:var(--gold);
+  margin-top:8px;
+}
+
+input{
+  width:100%;
+  max-width:290px;
+  padding:14px;
+  margin-top:10px;
+  border-radius:16px;
+  border:1px solid var(--stroke);
+  background:var(--glass2);
+  color:#fff;
+  text-align:center;
+}
+
+button{
+  width:100%;
+  max-width:290px;
+  margin-top:14px;
+  padding:14px;
+  border-radius:16px;
+  border:none;
+  cursor:pointer;
+  font-weight:700;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#111;
+}
+
+.months,.calendar,.times{
+  display:flex;
+  overflow-x:auto;
+  gap:10px;
+  max-width:300px;
+}
+
+.monthItem,.day,.time{
+  flex:0 0 auto;
+  padding:10px 14px;
+  border-radius:999px;
+  border:1px solid var(--stroke);
+  background:var(--glass2);
+  font-size:12px;
+  cursor:pointer;
+}
+
+.day{
+  width:64px;height:72px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:18px;
+  flex-direction:column;
+}
+
+.monthItem.active,.day.active,.time.selected{
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#111;
+}
+
+.time.blocked{
+  background:rgba(255,59,48,0.2);
+  pointer-events:none;
+}
+
+/* ADMIN */
+#adminCalendar .day{margin:4px;}
+#adminCalendar .hasBooking{border:1px solid var(--gold);}
+
+#adminDayBox > div{
+  margin-top:10px;
+  padding:14px;
+  border-radius:18px;
+  background:var(--glass);
+  border:1px solid var(--stroke);
+}
+
+#adminDayBox{
+  width:100%;
+  max-height:300px;
+  overflow-y:auto;
+  margin-top:10px;
+}
+
+#adminDayBox > div{
+  margin-top:10px;
+  padding:12px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  text-align:left;
+}
+
+h1{
+  font-size:72px;
+  font-weight:700;
+  letter-spacing:6px;
+}
+
+.day.blocked{
+  background:rgba(255,59,48,0.25);
+  border:1px solid rgba(255,59,48,0.6);
+  color:#ff4d4d;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<!-- HOME -->
+<div id="s1" class="screen active">
+  <h1>JHON</h1>
+  <div class="sub">BARBER</div>
+ <button onclick="go(2)">ΚΛΕΙΣΕ ΤΟ ΡΑΝΤΕΒΟΥ ΣΟΥ</button>
+  <button onclick="go(5)">ADMIN</button>
+</div>
+
+<!-- USER -->
+<div id="s2" class="screen">
+  <h2>Στοιχεία</h2>
+  <input id="name" placeholder="Όνομα"/>
+  <input id="phone" placeholder="Τηλέφωνο"/>
+
+  <button onclick="go(3)">ΣΥΝΕΧΕΙΑ</button>
+  <button onclick="go(1)">ΠΙΣΩ</button>
+</div>
+
+<!-- BOOK -->
+<div id="s3" class="screen">
+
+  <h2>Μήνας</h2>
+  <div class="months" id="months"></div>
+
+  <h2>Ημέρα</h2>
+  <div class="calendar" id="cal"></div>
+
+  <h2>Ώρα</h2>
+  <div class="times" id="times"></div>
+
+  <button onclick="book()">ΚΡΑΤΗΣΗ</button>
+
+<button onclick="go(2)" style="background:rgba(255,255,255,0.08);color:#fff;">
+  ΠΙΣΩ
+</button>
+</div>
+
+<!-- SUCCESS -->
+<div id="s4" class="screen">
+  <h1>✔</h1>
+<div class="sub">Το ραντεβού σου καταχωρήθηκε</div>
+
+<button onclick="go(1)">EXIT</button>
+
+</div>
+
+<!-- ADMIN -->
+<div id="s5" class="screen">
+
+  <h2>ΡΑΝΤΕΒΟΥ</h2>
+
+  <h2>Μήνας</h2>
+  <div class="months" id="adminMonths"></div>
+
+  <h2>Ημέρα</h2>
+  <div class="calendar" id="adminCalendar"></div>
+
+  <div id="adminDayBox"></div>
+
+<button onclick="toggleDayBlock()" id="blockBtn">
+  ΚΛΕΙΣΤΟ / ΑΝΟΙΧΤΟ
+</button>
+
+  <button onclick="go(1)">ΠΙΣΩ</button>
+</div>
+
+</div>
+
+<script>
+
+const client = supabase.createClient(
+  "https://zumhdqkwsllpvcirmcfx.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1bWhkcWt3c2xscHZjaXJtY2Z4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MDA5ODUsImV4cCI6MjA5NDQ3Njk4NX0.KT7eqBsfuzT8V-rQUIp31POR9gusoHJXmxvXjlUy3OU"
+);
+
+let screen = 1;
+
+let months = [], monthIndex = 0;
+let adminMonths = [], adminMonthIndex = 0;
+
+let selectedDay = null;
+let selectedTime = null;
+
+let booked = [];
+let adminSelectedDay = null;
+
+let blocked = [];
+
+/* NAV */
+
+async function go(n){
+  document.getElementById("s"+screen).classList.remove("active");
+  document.getElementById("s"+n).classList.add("active");
+  screen = n;
+
+  if(n === 3){
+    await load();
+    await loadBlocked();
+    initBooking();
+  }
+
+  if(n === 5){
+    await load();
+    await loadBlocked();
+    initAdmin();
+    renderAdminMonths();
+    renderAdminCalendar();
+  }
+}
+
+/* LOAD */
+async function load(){
+  const { data } = await client.from("appointmentsnew").select("*");
+  booked = data || [];
+}
+
+async function loadBlocked(){
+  const { data, error } = await client
+    .from("blocked_days")
+    .select("*");
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  blocked = data || [];
+}
+
+async function loadBlocked(){
+  const { data } = await client.from("blocked_days").select("*");
+  blocked = data || [];
+}
+
+/* ================= BOOKING ================= */
+
+function initBooking(){
+  const now = new Date();
+  months = [];
+
+  for(let i=0;i<12;i++){
+    months.push(new Date(now.getFullYear(), now.getMonth()+i, 1));
+  }
+
+  renderMonths();
+  renderCalendar();
+  renderTimes();
+}
+
+function renderMonths(){
+  const box = document.getElementById("months");
+  box.innerHTML = "";
+
+  months.forEach((m,i)=>{
+    const d = document.createElement("div");
+    d.className = "monthItem" + (i===monthIndex?" active":"");
+    d.innerText = m.toLocaleString("el",{month:"short"});
+
+    d.onclick = ()=>{
+      monthIndex = i;
+      renderMonths();
+      renderCalendar();
+    };
+
+    box.appendChild(d);
+  });
+}
+
+function renderCalendar(){
+  const box = document.getElementById("cal");
+  box.innerHTML = "";
+
+  const m = months[monthIndex];
+  const days = new Date(m.getFullYear(), m.getMonth()+1, 0).getDate();
+
+  for(let i=1;i<=days;i++){
+
+    const date = `${m.getFullYear()}-${m.getMonth()+1}-${i}`;
+    const div = document.createElement("div");
+
+    div.className = "day" + (selectedDay===date?" active":"");
+    div.innerHTML = i;
+
+    div.onclick = ()=>{
+      selectedDay = date;
+      selectedTime = null;
+      renderCalendar();
+      renderTimes();
+    };
+
+    box.appendChild(div);
+  }
+}
+
+function renderTimes(){
+  const box = document.getElementById("times");
+  box.innerHTML = "";
+
+  if(!selectedDay) return;
+
+  const isBlocked = blocked.some(b => b.day === selectedDay);
+
+  if(isBlocked){
+    box.innerHTML = "<div>Η μέρα είναι κλειστή</div>";
+    return;
+  }
+
+  for(let h=10; h<=20; h++){
+    ["00","30"].forEach(m=>{
+
+      const t = `${h}:${m}`;
+
+      const exists = booked.find(b =>
+        b.day === selectedDay && b.time === t
+      );
+
+      if(exists) return;
+
+      const div = document.createElement("div");
+      div.className = "time" + (selectedTime===t?" selected":"");
+      div.innerText = t;
+
+      div.onclick = ()=>{
+        selectedTime = t;
+        renderTimes();
+      };
+
+      box.appendChild(div);
+    });
+  }
+}
+
+async function book(){
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
+
+  await client.from("appointmentsnew").insert([
+    { name, phone, day: selectedDay, time: selectedTime }
+  ]);
+
+  go(4);
+}
+
+/* ================= ADMIN ================= */
+
+async function loadAdmin(){
+  await load();
+  await loadBlocked();
+
+  initAdmin();
+  renderAdminMonths();
+  renderAdminCalendar();
+
+  adminSelectedDay = null;
+  updateBlockButton();
+}
+
+function initAdmin(){
+  const now = new Date();
+  adminMonths = [];
+
+  for(let i=0;i<12;i++){
+    adminMonths.push(new Date(now.getFullYear(), now.getMonth()+i, 1));
+  }
+}
+
+function renderAdminMonths(){
+  const box = document.getElementById("adminMonths");
+  box.innerHTML = "";
+
+  adminMonths.forEach((m,i)=>{
+    const d = document.createElement("div");
+    d.className = "monthItem" + (i===adminMonthIndex?" active":"");
+    d.innerText = m.toLocaleString("el",{month:"short"});
+
+    d.onclick = ()=>{
+      adminMonthIndex = i;
+      renderAdminMonths();
+      renderAdminCalendar();
+    };
+
+    box.appendChild(d);
+  });
+}
+
+function renderAdminCalendar(){
+  const box = document.getElementById("adminCalendar");
+  box.innerHTML = "";
+
+  const m = adminMonths[adminMonthIndex];
+  const days = new Date(m.getFullYear(), m.getMonth()+1, 0).getDate();
+
+  for(let i=1;i<=days;i++){
+
+    const date = `${m.getFullYear()}-${m.getMonth()+1}-${i}`;
+    const has = booked.some(b => b.day === date);
+    const isBlocked = blocked.some(b => b.day === date);
+
+    const div = document.createElement("div");
+
+    div.className =
+      "day" +
+      (isBlocked ? " blocked" : "") +
+      (!isBlocked && has ? " active" : "");
+
+    div.innerHTML = i;
+
+    div.onclick = ()=>{
+      adminSelectedDay = date;
+      renderAdminDay();
+      updateBlockButton();
+    };
+
+    box.appendChild(div);
+  }
+}
+
+function renderAdminDay(){
+  const box = document.getElementById("adminDayBox");
+  box.innerHTML = "";
+
+  if(!adminSelectedDay){
+    box.innerHTML = "<div>Διάλεξε ημέρα</div>";
+    return;
+  }
+
+  const list = booked.filter(b => b.day === adminSelectedDay);
+
+  if(list.length === 0){
+    box.innerHTML = "<div>Δεν υπάρχουν ραντεβού</div>";
+    return;
+  }
+
+  list.forEach(b=>{
+    const div = document.createElement("div");
+
+    div.innerHTML = `
+      <b>Όνομα:</b> ${b.name}<br>
+      <b>Τηλ:</b> ${b.phone}<br>
+      <b>Ημέρα:</b> ${b.day}<br>
+      <b>Ώρα:</b> ${b.time}<br><br>
+
+      <button onclick="deleteBooking('${b.id}')">❌ Διαγραφή</button>
+    `;
+
+    box.appendChild(div);
+  });
+}
+
+async function deleteBooking(id){
+  await client.from("appointmentsnew").delete().eq("id", id);
+  await load();
+  renderAdminCalendar();
+  renderAdminDay();
+}
+
+/* ================= TOGGLE BLOCK (ΣΩΣΤΟ) ================= */
+
+async function toggleDayBlock(){
+
+  if(!adminSelectedDay){
+    alert("Διάλεξε πρώτα ημέρα");
+    return;
+  }
+
+  const isBlocked = blocked.some(b => b.day === adminSelectedDay);
+
+  try {
+
+    if(isBlocked){
+
+      const { error } = await client
+        .from("blocked_days")
+        .delete()
+        .eq("day", adminSelectedDay);
+
+      if(error) throw error;
+
+    } else {
+
+      const { error } = await client
+        .from("blocked_days")
+        .insert([{ day: adminSelectedDay }]);
+
+      if(error) throw error;
+    }
+
+    // 🔥 ΠΟΛΥ ΣΗΜΑΝΤΙΚΟ: reload από DB
+    await loadBlocked();
+
+    // 🔥 refresh UI
+    renderAdminCalendar();
+    updateBlockButton();
+
+    const newState = blocked.some(b => b.day === adminSelectedDay);
+
+    alert(newState ? "🔴 Έκλεισε η μέρα" : "🟢 Άνοιξε η μέρα");
+
+  } catch (err) {
+  console.error("FULL ERROR:", err);
+  alert(err.message);
+}
+}
+
+/* BUTTON TEXT */
+function updateBlockButton(){
+  const btn = document.getElementById("blockBtn");
+
+  if(!adminSelectedDay){
+    btn.innerText = "ΚΛΕΙΣΤΟ / ΑΝΟΙΧΤΟ";
+    return;
+  }
+
+  const isBlocked = blocked.some(b => b.day === adminSelectedDay);
+
+  btn.innerText = isBlocked
+    ? "🔴 ΚΛΕΙΣΤΟ (πάτα για άνοιγμα)"
+    : "🟢 ΑΝΟΙΧΤΟ (πάτα για κλείσιμο)";
+}
+
+</script>
+
+</body>
+</html>
